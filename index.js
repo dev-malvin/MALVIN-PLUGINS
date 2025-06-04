@@ -1,65 +1,43 @@
 // index.js
-// Kingx-firev2 WhatsApp Bot - Baileys Pro Version
+// Kingx-firev2 WhatsApp Bot using @whiskeysockets/baileys
 
-const { makeBaileysPro } = require('@whiskeysockets/baileys-pro');
-const { useMultiFileAuthState } = require('@whiskeysockets/baileys-pro/lib/auth-state');
-
+const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const {
-    AntiDelDB,
-    initializeAntiDeleteSettings,
-    setAnti,
-    getAnti,
-    getAllAntiDeleteSettings
+    AntiDelDB, initializeAntiDeleteSettings, setAnti, getAnti, getAllAntiDeleteSettings
 } = require('./data/antidel');
 const {
-    saveContact,
-    loadMessage,
-    getName,
-    getChatSummary,
-    saveGroupMetadata,
-    getGroupMetadata,
-    saveMessageCount,
-    getInactiveGroupMembers,
-    getGroupMembersMessageCount,
-    saveMessage,
+    saveContact, loadMessage, getName, getChatSummary, saveGroupMetadata, getGroupMetadata,
+    saveMessageCount, getInactiveGroupMembers, getGroupMembersMessageCount, saveMessage
 } = require('./data/store');
 const {
-    DeletedText,
-    DeletedMedia,
-    AntiDelete
+    DeletedText, DeletedMedia, AntiDelete
 } = require('./lib/antidel');
 const {
-    getBuffer,
-    getGroupAdmins,
-    getRandom,
-    h2k,
-    isUrl,
-    Json,
-    runtime,
-    sleep,
-    fetchJson
+    getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson
 } = require('./lib/functions');
 const { sms, downloadMediaMessage } = require('./lib/msg');
 
 async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileyspro');
-    const sock = makeBaileysPro({
-        auth: state,
+    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+    const sock = makeWASocket({
         printQRInTerminal: true,
+        auth: state,
     });
 
     sock.ev.on('creds.update', saveCreds);
 
     // Connection updates
-    sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
         if (connection === 'close') {
-            if (lastDisconnect?.error?.output?.statusCode !== 401) {
+            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            if (shouldReconnect) {
                 startBot();
             } else {
                 console.log('Logged out.');
             }
         } else if (connection === 'open') {
-            console.log('✅ Connected to WhatsApp (Baileys Pro)');
+            console.log('✅ Connected to WhatsApp');
             initializeAntiDeleteSettings();
         }
     });
@@ -69,7 +47,6 @@ async function startBot() {
         if (type !== 'notify') return;
         for (const msg of messages) {
             try {
-                // Save message
                 await saveMessage(msg);
 
                 // Run anti-delete if enabled
@@ -77,10 +54,11 @@ async function startBot() {
                     await AntiDelete(msg, sock);
                 }
 
-                // Handle contact save
-                await saveContact(msg.pushName || msg.key.participant);
+                // Save contact (if available)
+                if (msg.pushName || msg.key.participant)
+                    await saveContact(msg.pushName || msg.key.participant);
 
-                // Add more command handling or features here
+                // Extend: Add your command and feature handling here
 
             } catch (e) {
                 console.error('Error handling message:', e);
@@ -103,7 +81,6 @@ async function startBot() {
     // GROUP PARTICIPANTS UPDATE
     sock.ev.on('group-participants.update', async (update) => {
         try {
-            // Save group metadata and members
             await saveGroupMetadata(update.id, update.participants || []);
             // Add your custom group join/leave logic here
         } catch (e) {
@@ -123,15 +100,9 @@ async function startBot() {
         }
     });
 
-    // CALL EVENTS (optional, you can add logic as needed)
+    // CALL EVENTS (optional, extend as needed)
     sock.ev.on('call', async (callEvents) => {
-        // For anti-call or call logging, add your logic here
-        // Example: auto-block on incoming call
-        // for (const call of callEvents) {
-        //     if (call.status === 'offer') {
-        //         await sock.updateBlockStatus(call.from, 'block');
-        //     }
-        // }
+        // Example: handle call events (auto-block, logging, etc.)
     });
 
     // PRESENCE UPDATES (optional)
