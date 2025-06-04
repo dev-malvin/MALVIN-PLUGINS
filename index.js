@@ -1,7 +1,6 @@
-// index.js
-// Kingx-firev2 WhatsApp Bot using @whiskeysockets/baileys
-
 const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const qrcode = require('qrcode-terminal');
+
 const {
     AntiDelDB, initializeAntiDeleteSettings, setAnti, getAnti, getAllAntiDeleteSettings
 } = require('./data/antidel');
@@ -20,15 +19,18 @@ const { sms, downloadMediaMessage } = require('./lib/msg');
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
     const sock = makeWASocket({
-        printQRInTerminal: true,
         auth: state,
+        // printQRInTerminal: true, // REMOVE THIS LINE!
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    // Connection updates
+    // Print QR code in terminal
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update;
+        const { connection, lastDisconnect, qr } = update;
+        if (qr) {
+            qrcode.generate(qr, { small: true });
+        }
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
             if (shouldReconnect) {
@@ -58,7 +60,7 @@ async function startBot() {
                 if (msg.pushName || msg.key.participant)
                     await saveContact(msg.pushName || msg.key.participant);
 
-                // Extend: Add your command and feature handling here
+                // Add your command and feature handling here
 
             } catch (e) {
                 console.error('Error handling message:', e);
@@ -119,8 +121,6 @@ async function startBot() {
     sock.ev.on('battery.update', (info) => {
         // info.level, info.isCharging
     });
-
-    // ADD MORE EVENT HANDLERS AS NEEDED
 }
 
 startBot().catch(console.error);
