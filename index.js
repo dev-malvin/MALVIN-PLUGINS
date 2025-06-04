@@ -1,6 +1,8 @@
+const express = require('express');
 const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const qrcode = require('qrcode-terminal');
 
+// --- Your module imports ---
 const {
     AntiDelDB, initializeAntiDeleteSettings, setAnti, getAnti, getAllAntiDeleteSettings
 } = require('./data/antidel');
@@ -16,12 +18,18 @@ const {
 } = require('./lib/functions');
 const { sms, downloadMediaMessage } = require('./lib/msg');
 
+// --- Minimal Express web server for Render port binding ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.get('/', (req, res) => res.send('Kingx-firev2 WhatsApp bot is running!'));
+app.listen(PORT, () => {
+    console.log(`Web server running on port ${PORT}`);
+});
+
+// --- Baileys WhatsApp bot setup ---
 async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
-    const sock = makeWASocket({
-        auth: state,
-        // printQRInTerminal: true, // REMOVE THIS LINE!
-    });
+    const sock = makeWASocket({ auth: state });
 
     sock.ev.on('creds.update', saveCreds);
 
