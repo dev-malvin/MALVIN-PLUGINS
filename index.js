@@ -1,11 +1,10 @@
 // index.js
 
-// 1. Load required modules
 const { SESSION_ID } = require('./settings');
 const fs = require('fs');
 const path = require('path');
 
-// 2. Helper: Decode SESSION_ID to session folder
+// Helper: Decode SESSION_ID to session folder
 function decodeAuthState(sessionString, dir = 'session') {
     if (!sessionString) return;
     if (!fs.existsSync(dir)) fs.mkdirSync(dir);
@@ -15,28 +14,23 @@ function decodeAuthState(sessionString, dir = 'session') {
     }
 }
 
-// 3. On startup, if SESSION_ID is set and session folder is missing, restore session
+// On startup, if SESSION_ID is set and session folder is missing, restore session
 if (SESSION_ID && !fs.existsSync('session')) {
     console.log('[INFO] Restoring WhatsApp session from SESSION_ID...');
     decodeAuthState(SESSION_ID, 'session');
 }
 
-// 4. Baileys initialization
 const {
     default: makeWASocket,
     useMultiFileAuthState,
     DisconnectReason,
-    fetchLatestBaileysVersion,
-    makeInMemoryStore
+    fetchLatestBaileysVersion
 } = require('@whiskeysockets/baileys');
-
 const P = require('pino');
-const store = makeInMemoryStore({ logger: P().child({ level: 'silent', stream: 'store' }) });
 
 async function startBot() {
     // Use multi-file auth state with the 'session' folder
     const { state, saveCreds } = await useMultiFileAuthState('session');
-
     // Fetch latest Baileys version (optional but recommended)
     const { version, isLatest } = await fetchLatestBaileysVersion();
     console.log(`[INFO] Using Baileys version: ${version.join('.')}, latest: ${isLatest}`);
@@ -49,8 +43,6 @@ async function startBot() {
         auth: state,
         browser: ['Kingx-firev2', 'Chrome', '1.0.0']
     });
-
-    store.bind(sock.ev);
 
     // Save credentials on update
     sock.ev.on('creds.update', saveCreds);
@@ -81,6 +73,27 @@ async function startBot() {
             await sock.sendMessage(msg.key.remoteJid, { text: 'pong' }, { quoted: msg });
         }
     });
+
+    // --- PLUGIN LOADER ---
+    const pluginsDir = path.join(__dirname, 'plugins');
+    if (fs.existsSync(pluginsDir)) {
+        fs.readdirSync(pluginsDir).forEach(file => {
+            if (file.endsWith('.js')) {
+                try {
+                    const plugin = require(path.join(pluginsDir, file));
+                    if (typeof plugin === 'function') {
+                        plugin(sock);
+                    }
+                    console.log(`[PLUGIN] Loaded: ${file}`);
+                } catch (err) {
+                    console.error(`[PLUGIN] Error loading ${file}:`, err);
+                }
+            }
+        });
+    } else {
+        console.warn('[WARN] Plugins folder not found!');
+    }
+    // --- END PLUGIN LOADER ---
 }
 
 startBot();
