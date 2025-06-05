@@ -1,134 +1,86 @@
-const express = require('express');
-const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
-const qrcode = require('qrcode-terminal');
+// index.js
 
-// --- Your module imports ---
-const {
-    AntiDelDB, initializeAntiDeleteSettings, setAnti, getAnti, getAllAntiDeleteSettings
-} = require('./data/antidel');
-const {
-    saveContact, loadMessage, getName, getChatSummary, saveGroupMetadata, getGroupMetadata,
-    saveMessageCount, getInactiveGroupMembers, getGroupMembersMessageCount, saveMessage
-} = require('./data/store');
-const {
-    DeletedText, DeletedMedia, AntiDelete
-} = require('./lib/antidel');
-const {
-    getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, runtime, sleep, fetchJson
-} = require('./lib/functions');
-const { sms, downloadMediaMessage } = require('./lib/msg');
+// 1. Load required modules
+const { SESSION_ID } = require('./settings');
+const fs = require('fs');
+const path = require('path');
 
-// --- Minimal Express web server for Render port binding ---
-const app = express();
-const PORT = process.env.PORT || 3000;
-app.get('/', (req, res) => res.send('Kingx-firev2 WhatsApp bot is running!'));
-app.listen(PORT, () => {
-    console.log(`Web server running on port ${PORT}`);
-});
+// 2. Helper: Decode SESSION_ID to session folder
+function decodeAuthState(sessionString, dir = 'session') {
+    if (!sessionString) return;
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+    const data = JSON.parse(Buffer.from(sessionString, 'base64').toString());
+    for (const [f, content] of Object.entries(data)) {
+        fs.writeFileSync(path.join(dir, f), content, 'utf8');
+    }
+}
 
-// --- Baileys WhatsApp bot setup ---
+// 3. On startup, if SESSION_ID is set and session folder is missing, restore session
+if (SESSION_ID && !fs.existsSync('session')) {
+    console.log('[INFO] Restoring WhatsApp session from SESSION_ID...');
+    decodeAuthState(SESSION_ID, 'session');
+}
+
+// 4. Baileys initialization
+const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason,
+    fetchLatestBaileysVersion,
+    makeInMemoryStore
+} = require('@whiskeysockets/baileys');
+
+const P = require('pino');
+const store = makeInMemoryStore({ logger: P().child({ level: 'silent', stream: 'store' }) });
+
 async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
-    const sock = makeWASocket({ auth: state });
+    // Use multi-file auth state with the 'session' folder
+    const { state, saveCreds } = await useMultiFileAuthState('session');
 
+    // Fetch latest Baileys version (optional but recommended)
+    const { version, isLatest } = await fetchLatestBaileysVersion();
+    console.log(`[INFO] Using Baileys version: ${version.join('.')}, latest: ${isLatest}`);
+
+    // Create socket (WhatsApp connection)
+    const sock = makeWASocket({
+        version,
+        logger: P({ level: 'silent' }),
+        printQRInTerminal: !fs.existsSync('session'), // Show QR only if session is missing
+        auth: state,
+        browser: ['Kingx-firev2', 'Chrome', '1.0.0']
+    });
+
+    store.bind(sock.ev);
+
+    // Save credentials on update
     sock.ev.on('creds.update', saveCreds);
 
-    // Print QR code in terminal
+    // Connection updates
     sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect, qr } = update;
-        if (qr) {
-            qrcode.generate(qr, { small: true });
-        }
+        const { connection, lastDisconnect } = update;
         if (connection === 'close') {
-            const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
-            if (shouldReconnect) {
-                startBot();
+            const reason = lastDisconnect?.error?.output?.statusCode;
+            if (reason === DisconnectReason.loggedOut) {
+                console.log('[WARN] You have been logged out.');
+                // Optionally, remove session folder here
+                fs.rmSync('session', { recursive: true, force: true });
             } else {
-                console.log('Logged out.');
+                console.log('[INFO] Connection closed. Reconnecting...');
+                startBot();
             }
         } else if (connection === 'open') {
-            console.log('✅ Connected to WhatsApp');
-            initializeAntiDeleteSettings();
+            console.log('[SUCCESS] Connected to WhatsApp!');
         }
     });
 
-    // MESSAGE RECEIVED
-    sock.ev.on('messages.upsert', async ({ messages, type }) => {
-        if (type !== 'notify') return;
-        for (const msg of messages) {
-            try {
-                await saveMessage(msg);
-
-                // Run anti-delete if enabled
-                if (await getAnti(msg.key.remoteJid)) {
-                    await AntiDelete(msg, sock);
-                }
-
-                // Save contact (if available)
-                if (msg.pushName || msg.key.participant)
-                    await saveContact(msg.pushName || msg.key.participant);
-
-                // Add your command and feature handling here
-
-            } catch (e) {
-                console.error('Error handling message:', e);
-            }
+    // Example: simple message handler
+    sock.ev.on('messages.upsert', async (m) => {
+        const msg = m.messages[0];
+        if (!msg.message || msg.key.fromMe) return;
+        if (msg.message.conversation === 'ping') {
+            await sock.sendMessage(msg.key.remoteJid, { text: 'pong' }, { quoted: msg });
         }
-    });
-
-    // MESSAGE DELETION (ANTI-DELETE)
-    sock.ev.on('messages.delete', async (item) => {
-        for (const key of item.keys) {
-            if (await getAnti(key.remoteJid)) {
-                const deletedMsg = await loadMessage(key.id);
-                if (deletedMsg) {
-                    await sock.sendMessage(key.remoteJid, { text: `Anti-delete: Message restored\n${JSON.stringify(deletedMsg)}` });
-                }
-            }
-        }
-    });
-
-    // GROUP PARTICIPANTS UPDATE
-    sock.ev.on('group-participants.update', async (update) => {
-        try {
-            await saveGroupMetadata(update.id, update.participants || []);
-            // Add your custom group join/leave logic here
-        } catch (e) {
-            console.error('Error in group participants update:', e);
-        }
-    });
-
-    // GROUP UPDATE
-    sock.ev.on('groups.update', async (updates) => {
-        for (const update of updates) {
-            try {
-                await saveGroupMetadata(update.id, update.participants || []);
-                // Custom logic for group subject, settings, etc.
-            } catch (e) {
-                console.error('Error in groups.update:', e);
-            }
-        }
-    });
-
-    // CALL EVENTS (optional, extend as needed)
-    sock.ev.on('call', async (callEvents) => {
-        // Example: handle call events (auto-block, logging, etc.)
-    });
-
-    // PRESENCE UPDATES (optional)
-    sock.ev.on('presence.update', async (presence) => {
-        // Handle presence updates (typing, online, offline)
-    });
-
-    // BLOCKLIST UPDATES (optional)
-    sock.ev.on('blocklist.set', async (blocklist) => {
-        // Handle blocklist updates
-    });
-
-    // BATTERY STATUS (optional)
-    sock.ev.on('battery.update', (info) => {
-        // info.level, info.isCharging
     });
 }
 
-startBot().catch(console.error);
+startBot();
