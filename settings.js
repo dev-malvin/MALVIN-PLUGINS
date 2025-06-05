@@ -10,7 +10,7 @@ SESSION_ID: process.env.SESSION_ID || "malvin~JqEw0QiQ#jG3I8bvEEaSoigRkjInzJPL5c
 // add your Session Id make sure it starts with malvin~
 PREFIX: process.env.PREFIX || ".",
 // add your prifix for bot   
-BOT_NAME: process.env.BOT_NAME || "ᴍᴀʟᴠɪɴ-xᴅ",
+BOT_NAME: process.env.BOT_NAME || "Soul-Society",
 // add bot name here for menu
 MODE: process.env.MODE || "private",
 // make bot public-private-inbox-group 
@@ -24,7 +24,7 @@ LINK_WHITELIST: "youtube.com,github.com",
         AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN || "true",
 // make true or false status auto seen
 
-        AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY || "false",
+        AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY || "true",
 // make true if you want auto reply on status 
 
         AUTO_STATUS_REACT: process.env.AUTO_STATUS_REACT || "true",
@@ -65,13 +65,13 @@ LINK_WHITELIST: "youtube.com,github.com",
       CUSTOM_REACT_EMOJIS: process.env.CUSTOM_REACT_EMOJIS || "💝,💖,💗,❤️‍🩹,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍",
 // chose custom react emojis by yourself 
 
-          DELETE_LINKS: process.env.DELETE_LINKS || "false",
+          DELETE_LINKS: process.env.DELETE_LINKS || "true",
 // automatic delete links witho remove member 
 
-          OWNER_NUMBER: process.env.OWNER_NUMBER || "26371475XXXX",
+          OWNER_NUMBER: process.env.OWNER_NUMBER || "27785455137",
 // add your bot owner number
 
-OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
+OWNER_NAME: process.env.OWNER_NAME || "27782451708",
 // add bot owner name
 
               DESCRIPTION: process.env.DESCRIPTION || "*© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍᴀʟᴠɪɴ ᴋɪɴɢ*",
@@ -85,7 +85,7 @@ OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
                 ANTI_BAD: process.env.ANTI_BAD || "false",
 // false or true for anti bad words  
 
-            ANTI_LINK_KICK: process.env.ANTI_LINK_KICK || "false",
+            ANTI_LINK_KICK: process.env.ANTI_LINK_KICK || "true",
 // make anti link true,false for groups 
 
             AUTO_VOICE: process.env.AUTO_VOICE || "false",
@@ -97,7 +97,7 @@ OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
               AUTO_REPLY: process.env.AUTO_REPLY || "false",
 // make true or false automatic text reply 
 
-        ALWAYS_ONLINE: process.env.ALWAYS_ONLINE || "false",
+        ALWAYS_ONLINE: process.env.ALWAYS_ONLINE || "true",
 // maks true for always online 
 
          PUBLIC_MODE: process.env.PUBLIC_MODE || "false",
