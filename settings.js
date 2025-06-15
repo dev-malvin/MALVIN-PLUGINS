@@ -10,9 +10,9 @@ SESSION_ID: process.env.SESSION_ID || "",
 // add your Session Id make sure it starts with malvin~
 PREFIX: process.env.PREFIX || ".",
 // add your prifix for bot   
-BOT_NAME: process.env.BOT_NAME || "ᴍᴀʟᴠɪɴ-xᴅ",
+BOT_NAME: process.env.BOT_NAME || "Szchino",
 // add bot name here for menu
-MODE: process.env.MODE || "public",
+MODE: process.env.MODE || "inbox",
 // make bot public-private-inbox-group 
 
 LINK_WHITELIST: "youtube.com,github.com",
@@ -24,7 +24,7 @@ LINK_WHITELIST: "youtube.com,github.com",
         AUTO_STATUS_SEEN: process.env.AUTO_STATUS_SEEN || "true",
 // make true or false status auto seen
 
-        AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY || "false",
+        AUTO_STATUS_REPLY: process.env.AUTO_STATUS_REPLY || "true",
 // make true if you want auto reply on status 
 
         AUTO_STATUS_REACT: process.env.AUTO_STATUS_REACT || "true",
@@ -34,13 +34,13 @@ LINK_WHITELIST: "youtube.com,github.com",
 // set the auto reply massage on status reply  
 
 
-       WELCOME: process.env.WELCOME || "true",
+       WELCOME: process.env.WELCOME || "false",
 // true if want welcome and goodbye msg in groups 
    
        ADMIN_EVENTS: process.env.ADMIN_EVENTS || "false",
 // make true to know who dismiss or promoted a member in group
 
-      ANTI_LINK: process.env.ANTI_LINK || "true",
+      ANTI_LINK: process.env.ANTI_LINK || "false",
 // make anti link true,false for groups 
 
       MENTION_REPLY: process.env.MENTION_REPLY || "false",
@@ -65,13 +65,13 @@ LINK_WHITELIST: "youtube.com,github.com",
       CUSTOM_REACT_EMOJIS: process.env.CUSTOM_REACT_EMOJIS || "💝,💖,💗,❤️‍🩹,❤️,🧡,💛,💚,💙,💜,🤎,🖤,🤍",
 // chose custom react emojis by yourself 
 
-          DELETE_LINKS: process.env.DELETE_LINKS || "false",
+          DELETE_LINKS: process.env.DELETE_LINKS || "true",
 // automatic delete links witho remove member 
 
-          OWNER_NUMBER: process.env.OWNER_NUMBER || "26371475XXXX",
+          OWNER_NUMBER: process.env.OWNER_NUMBER || "2250715405077",
 // add your bot owner number
 
-OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
+OWNER_NAME: process.env.OWNER_NAME || "*Szchino* ᴛᴇᴄʜ",
 // add bot owner name
 
               DESCRIPTION: process.env.DESCRIPTION || "*© ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍᴀʟᴠɪɴ ᴋɪɴɢ*",
@@ -91,10 +91,10 @@ OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
             AUTO_VOICE: process.env.AUTO_VOICE || "false",
 // make true for send automatic voices
 
-        AUTO_STICKER: process.env.AUTO_STICKER || "false",
+        AUTO_STICKER: process.env.AUTO_STICKER || "true",
 // make true for automatic stickers 
 
-              AUTO_REPLY: process.env.AUTO_REPLY || "false",
+              AUTO_REPLY: process.env.AUTO_REPLY || "true",
 // make true or false automatic text reply 
 
         ALWAYS_ONLINE: process.env.ALWAYS_ONLINE || "false",
@@ -121,23 +121,7 @@ OWNER_NAME: process.env.OWNER_NAME || "ᴍᴀʟᴠɪɴ ᴛᴇᴄʜ",
       AUTO_RECORDING: process.env.AUTO_RECORDING || "false",
 // make it true for auto recoding 
 
-version: process.env.version || "0.0.5",
-
     
-START_MSG: process.env.START_MSG || `*Hᴇʟʟᴏ ᴛʜᴇʀᴇ ᴍᴀʟᴠɪɴ xᴅ ᴄᴏɴɴᴇᴄᴛᴇᴅ! 👋🏻* 
-
-    *ᴋᴇᴇᴘ ᴏɴ ᴜsɪɴɢ ᴍᴀʟᴠɪɴ ᴍᴏᴅs🚩* 
-
-> sᴜʙsᴄʀɪʙᴇ ʏᴛ ᴄʜᴀɴɴᴇʟ ғᴏʀ ᴛᴜᴛᴏʀɪᴀʟs
-    https://youtube.com/@malvintech2
-
-    - *ʏᴏᴜʀ ʙᴏᴛ ᴘʀᴇғɪx: ➡️[ . ]*
-> - ʏᴏᴜ ᴄᴀɴ ᴄʜᴀɴɢᴇ ᴜʀ ᴘʀᴇғɪx ᴜsɪɴɢ ᴛʜᴇ .ᴘʀᴇғɪx ᴄᴏᴍᴍᴀɴᴅ
-
-> ᴅᴏɴᴛ ғᴏʀɢᴇᴛ ᴛᴏ sʜᴀʀᴇ, sᴛᴀʀ &ғᴏʀᴋ ᴛʜᴇ ʀᴇᴘᴏ ⬇️ 
-    https://github.com/XdKing2/MALVIN-XD
-
-> © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍᴀʟᴠɪɴ ᴋɪɴɢ 🇿🇼`
-};
+START_MSG: process.env.START_MSG || `*¡Hola soy, Szchino! 👋🏻* 
 
 
