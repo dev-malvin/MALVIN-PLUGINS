@@ -1,61 +1,57 @@
 const axios = require("axios");
 const { malvin } = require("../malvin");
 
+// ✅ تحميل فيديوهات TikTok
 malvin({
   pattern: "tiktok",
-  alias: ["ttdl", "tiktokdl","tt"],
+  alias: ["ttdl", "tiktokdl", "tt"],
   react: '📥',
-  desc: "Download TikTok videos.",
-  category: "download",
-  use: ".tiktok <TikTok video URL>",
+  desc: "تحميل فيديوهات تيك توك",
+  category: "التحميل",
+  use: ".tiktok <رابط فيديو تيك توك>",
   filename: __filename
 }, async (conn, mek, m, { from, reply, args }) => {
   try {
-    // Check if the user provided a TikTok video URL
+    // التحقق من وجود رابط صالح
     const tiktokUrl = args[0];
     if (!tiktokUrl || !tiktokUrl.includes("tiktok.com")) {
-      return reply('Please provide a valid TikTok video URL. Example: `.tiktok https://tiktok.com/...`');
+      return reply('❌ يرجى إدخال رابط فيديو تيك توك صالح.\nمثال: `.tiktok https://tiktok.com/...`');
     }
 
-    // Add a reaction to indicate processing
+    // إرسال تفاعل انتظار
     await conn.sendMessage(from, { react: { text: '⏳', key: m.key } });
 
-    // Prepare the API URL
+    // رابط API
     const apiUrl = `https://api.nexoracle.com/downloader/tiktok-nowm?apikey=free_key@maher_apis&url=${encodeURIComponent(tiktokUrl)}`;
-
-    // Call the API using GET
     const response = await axios.get(apiUrl);
 
-    // Check if the API response is valid
+    // التحقق من الاستجابة
     if (!response.data || response.data.status !== 200 || !response.data.result) {
-      return reply('❌ Unable to fetch the video. Please check the URL and try again.');
+      return reply('❌ تعذر جلب الفيديو. تحقق من الرابط وحاول مجددًا.');
     }
 
-    // Extract the video details
     const { title, thumbnail, author, metrics, url } = response.data.result;
 
-    // Inform the user that the video is being downloaded
-    await reply(`📥 *Downloading TikTok video by @${author.username}... Please wait.*`);
+    await reply(`📥 *جاري تحميل فيديو تيك توك من @${author.username} ... الرجاء الانتظار.*`);
 
-    // Download the video
+    // تحميل الفيديو
     const videoResponse = await axios.get(url, { responseType: 'arraybuffer' });
     if (!videoResponse.data) {
-      return reply('❌ Failed to download the video. Please try again later.');
+      return reply('❌ فشل تحميل الفيديو. حاول لاحقًا.');
     }
 
-    // Prepare the video buffer
     const videoBuffer = Buffer.from(videoResponse.data, 'binary');
 
-    // Send the video with details
+    // إرسال الفيديو مع التفاصيل
     await conn.sendMessage(from, {
       video: videoBuffer,
-      caption: `📥 *ᴛɪᴋᴛᴏᴋ Vɪᴅᴇᴏ ᴅʟ*\n\n` +
-        `🔖 *Tɪᴛʟᴇ*: ${title || "No title"}\n` +
-        `👤 *Aᴜᴛʜᴏʀ*: @${author.username} (${author.nickname})\n` +
-        `❤️ *Lɪᴋᴇs*: ${metrics.digg_count}\n` +
-        `💬 *Cᴏᴍᴍᴇɴᴛs*: ${metrics.comment_count}\n` +
-        `🔁 *Sʜᴀʀᴇs*: ${metrics.share_count}\n` +
-        `📥 *Doᴡɴʟᴏᴀᴅs*: ${metrics.download_count}\n\n` +
+      caption: `📥 *فيديو TikTok*\n\n` +
+        `🎬 *العنوان:* ${title || "بدون عنوان"}\n` +
+        `👤 *الناشر:* @${author.username} (${author.nickname})\n` +
+        `❤️ *الإعجابات:* ${metrics.digg_count}\n` +
+        `💬 *التعليقات:* ${metrics.comment_count}\n` +
+        `🔁 *المشاركات:* ${metrics.share_count}\n` +
+        `⬇️ *التحميلات:* ${metrics.download_count}\n\n` +
         `> © ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴍʀ ᴍᴀʟᴠɪɴ ᴋɪɴɢ`,
       contextInfo: {
         mentionedJid: [m.sender],
@@ -69,13 +65,12 @@ malvin({
       }
     }, { quoted: mek });
 
-    // Add a reaction to indicate success
+    // تفاعل النجاح
     await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
-  } catch (error) {
-    console.error('Error downloading TikTok video:', error);
-    reply('❌ Unable to download the video. Please try again later.');
 
-    // Add a reaction to indicate failure
+  } catch (error) {
+    console.error('خطأ أثناء تحميل فيديو TikTok:', error);
+    reply('❌ تعذر تحميل الفيديو. الرجاء المحاولة لاحقًا.');
     await conn.sendMessage(from, { react: { text: '❌', key: m.key } });
   }
 });
