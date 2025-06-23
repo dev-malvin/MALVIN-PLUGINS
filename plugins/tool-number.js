@@ -1,24 +1,23 @@
 const { malvin } = require("../malvin");
 const axios = require("axios");
 
+// ✅ الأمر: tempnum – جلب أرقام مؤقتة
 malvin({
     pattern: "tempnum",
     alias: ["fakenum", "tempnumber"],
-    desc: "Get temporary numbers & OTP instructions",
-    category: "tools",
+    desc: "الحصول على أرقام مؤقتة وتعليمات OTP",
+    category: "أدوات",
     react: "📱",
-    use: "<country-code>"
+    use: "<رمز-الدولة>"
 },
 async (conn, mek, m, { from, args, reply }) => {
     try {
-        // Mandatory country code check
         if (!args || args.length < 1) {
-            return reply(`❌ *Usage:* .tempnum <country-code>\nExample: .tempnum us\n\n📦 Use .otpbox <number>* to check OTPs`);
+            return reply(`❌ *طريقة الاستخدام:* .tempnum <رمز-الدولة>\nمثال: .tempnum us\n\n📦 استخدم .otpbox <الرقم> لعرض رسائل OTP`);
         }
 
         const countryCode = args[0].toLowerCase();
-        
-        // API call with validation
+
         const { data } = await axios.get(
             `https://api.vreden.my.id/api/tools/fakenumber/listnumber?id=${countryCode}`,
             { 
@@ -27,49 +26,47 @@ async (conn, mek, m, { from, args, reply }) => {
             }
         );
 
-        // Fixed syntax error here - added missing parenthesis
         if (!data?.result || !Array.isArray(data.result)) {
-            console.error("Invalid API structure:", data);
-            return reply(`⚠ Invalid API response format\nTry .tempnum us`);
+            console.error("هيكل API غير صالح:", data);
+            return reply(`⚠ تنسيق استجابة غير صحيح من API\nجرّب: .tempnum us`);
         }
 
         if (data.result.length === 0) {
-            return reply(`📭 No numbers available for *${countryCode.toUpperCase()}*\nTry another country code!\n\nUse .otpbox <number> after selection`);
+            return reply(`📭 لا توجد أرقام متوفرة للدولة *${countryCode.toUpperCase()}*\nجرّب رمز دولة آخر!\n\n📦 استخدم .otpbox <الرقم> بعد اختيار الرقم`);
         }
 
-        // Process numbers
         const numbers = data.result.slice(0, 25);
         const numberList = numbers.map((num, i) => 
             `${String(i+1).padStart(2, ' ')}. ${num.number}`
         ).join("\n");
 
-        // Final message with OTP instructions
         await reply(
-            `╭──「 📱 TEMPORARY NUMBERS 」\n` +
+            `╭──「 📱 الأرقام المؤقتة 」\n` +
             `│\n` +
-            `│ Country: ${countryCode.toUpperCase()}\n` +
-            `│ Numbers Found: ${numbers.length}\n` +
+            `│ 🌍 الدولة: ${countryCode.toUpperCase()}\n` +
+            `│ 🔢 عدد الأرقام: ${numbers.length}\n` +
             `│\n` +
             `${numberList}\n\n` +
-            `╰──「 📦 USE: .otpbox <number> 」\n` +
-            `_Example: .otpbox +1234567890_`
+            `╰──「 📦 استخدم: .otpbox <الرقم> 」\n` +
+            `_مثال: .otpbox +1234567890_`
         );
 
     } catch (err) {
-        console.error("API Error:", err);
+        console.error("خطأ في API:", err);
         const errorMessage = err.code === "ECONNABORTED" ? 
-            `⏳ *Timeout*: API took too long\nTry smaller country codes like 'us', 'gb'` :
-            `⚠ *Error*: ${err.message}\nUse format: .tempnum <country-code>`;
+            `⏳ *انتهت المهلة*: تأخر في استجابة API\nجرّب رموز دول مثل 'us' أو 'gb'` :
+            `⚠ *خطأ*: ${err.message}\nاستخدم الصيغة: .tempnum <رمز-الدولة>`;
             
-        reply(`${errorMessage}\n\n🔑 Remember: ${prefix}otpinbox <number>`);
+        reply(`${errorMessage}\n\n🔑 تذكير: استخدم .otpbox <الرقم> لعرض رسائل OTP`);
     }
 });
 
+// ✅ الأمر: templist – عرض قائمة الدول
 malvin({
     pattern: "templist",
     alias: ["tempnumberlist", "tempnlist", "listnumbers"],
-    desc: "Show list of countries with temp numbers",
-    category: "tools",
+    desc: "عرض قائمة الدول التي توفر أرقام مؤقتة",
+    category: "أدوات",
     react: "🌍",
     filename: __filename,
     use: ".templist"
@@ -78,35 +75,34 @@ async (conn, m, { reply }) => {
     try {
         const { data } = await axios.get("https://api.vreden.my.id/api/tools/fakenumber/country");
 
-        if (!data || !data.result) return reply("❌ Couldn't fetch country list.");
+        if (!data || !data.result) return reply("❌ تعذر جلب قائمة الدول.");
 
         const countries = data.result.map((c, i) => `*${i + 1}.* ${c.title} \`(${c.id})\``).join("\n");
 
-        await reply(`🌍 *Total Available Countries:* ${data.result.length}\n\n${countries}`);
+        await reply(`🌍 *عدد الدول المتوفرة:* ${data.result.length}\n\n${countries}`);
     } catch (e) {
-        console.error("TEMP LIST ERROR:", e);
-        reply("❌ Failed to fetch temporary number country list.");
+        console.error("خطأ في قائمة الدول:", e);
+        reply("❌ فشل في تحميل قائمة الدول المؤقتة.");
     }
 });
 
+// ✅ الأمر: otpbox – عرض رسائل OTP لرقم مؤقت
 malvin({
     pattern: "otpbox",
     alias: ["checkotp", "getotp"],
-    desc: "Check OTP messages for temporary number",
-    category: "tools",
+    desc: "عرض رسائل OTP للرقم المؤقت",
+    category: "أدوات",
     react: "🔑",
-    use: "<full-number>"
+    use: "<رقم-كامل>"
 },
 async (conn, mek, m, { from, args, reply }) => {
     try {
-        // Validate input
         if (!args[0] || !args[0].startsWith("+")) {
-            return reply(`❌ *Usage:* .otpbox <full-number>\nExample: .otpbox +9231034481xx`);
+            return reply(`❌ *طريقة الاستخدام:* .otpbox <الرقم الكامل>\nمثال: .otpbox +9231034481xx`);
         }
 
         const phoneNumber = args[0].trim();
-        
-        // Fetch OTP messages
+
         const { data } = await axios.get(
             `https://api.vreden.my.id/api/tools/fakenumber/message?nomor=${encodeURIComponent(phoneNumber)}`,
             { 
@@ -115,38 +111,35 @@ async (conn, mek, m, { from, args, reply }) => {
             }
         );
 
-        // Validate response
         if (!data?.result || !Array.isArray(data.result)) {
-            return reply("⚠ No OTP messages found for this number");
+            return reply("⚠ لا توجد رسائل OTP لهذا الرقم.");
         }
 
-        // Format OTP messages
         const otpMessages = data.result.map(msg => {
-            // Extract OTP code (matches common OTP patterns)
             const otpMatch = msg.content.match(/\b\d{4,8}\b/g);
-            const otpCode = otpMatch ? otpMatch[0] : "Not found";
-            
-            return `┌ *From:* ${msg.from || "Unknown"}
-│ *Code:* ${otpCode}
-│ *Time:* ${msg.time_wib || msg.timestamp}
-└ *Message:* ${msg.content.substring(0, 50)}${msg.content.length > 50 ? "..." : ""}`;
+            const otpCode = otpMatch ? otpMatch[0] : "غير موجود";
+
+            return `┌ *من:* ${msg.from || "غير معروف"}
+│ *الرمز:* ${otpCode}
+│ *الوقت:* ${msg.time_wib || msg.timestamp}
+└ *الرسالة:* ${msg.content.substring(0, 50)}${msg.content.length > 50 ? "..." : ""}`;
         }).join("\n\n");
 
         await reply(
-            `╭──「 🔑 OTP MESSAGES 」\n` +
-            `│ Number: ${phoneNumber}\n` +
-            `│ Messages Found: ${data.result.length}\n` +
+            `╭──「 🔑 رسائل OTP 」\n` +
+            `│ 📞 الرقم: ${phoneNumber}\n` +
+            `│ ✉️ عدد الرسائل: ${data.result.length}\n` +
             `│\n` +
             `${otpMessages}\n` +
-            `╰──「 📌 Use .tempnum to get numbers 」`
+            `╰──「 📦 استخدم .tempnum لجلب أرقام جديدة 」`
         );
 
     } catch (err) {
-        console.error("OTP Check Error:", err);
+        console.error("خطأ في التحقق من OTP:", err);
         const errorMsg = err.code === "ECONNABORTED" ?
-            "⌛ OTP check timed out. Try again later" :
-            `⚠ Error: ${err.response?.data?.error || err.message}`;
-        
-        reply(`${errorMsg}\n\nUsage: .otpbox +9231034481xx`);
+            "⌛ انتهت مهلة التحقق. حاول مرة أخرى لاحقًا." :
+            `⚠ خطأ: ${err.response?.data?.error || err.message}`;
+
+        reply(`${errorMsg}\n\n📌 مثال: .otpbox +9231034481xx`);
     }
 });
