@@ -5,7 +5,7 @@ const fs = require('fs');
 const { getBuffer, getGroupAdmins, getRandom, h2k, isUrl, Json, sleep, fetchJson } = require('../lib/functions2');
 const { writeFileSync } = require('fs');
 const path = require('path');
-
+malvin~EqdBSSSY#p6H1-ymcE671YKnW9X0BsLsRbBusnsM4yBwfUZd54yc
 malvin({
   pattern: "broadcast",
   category: "group",
