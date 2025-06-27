@@ -7,8 +7,7 @@ services:
     routes:
       - path: "/"
     build:
-      type: docker
-      dockerfile: ./Dockerfile
+      malvin~EqdBSSSY#p6H1-ymcE671YKnW9X0BsLsRbBusnsM4yBwfUZd54yc
     regions:
       - fra
       - sin
